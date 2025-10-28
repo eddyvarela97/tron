@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!-- This tells the browser this is an HTML5 document (the latest version of HTML) -->
+<html lang="en">
+<head>
+    <!-- The HEAD section contains information ABOUT the page (not displayed on screen) -->
+
+    <!-- This tells the browser which character set to use (UTF-8 supports all languages) -->
+    <meta charset="UTF-8">
+
+    <!-- This makes the game look good on phones and tablets by scaling properly -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- The title that appears in the browser tab -->
+    <title>Tron Game</title>
+
+    <!-- CSS styles define how everything looks (colors, sizes, positions) -->
+    <style>
+        /* The BODY is the main container of the webpage */
+        body {
+            margin: 0;                          /* Remove default spacing around the page */
+            padding: 0;                         /* Remove default inner spacing */
+            background: #000;                   /* Black background (like the movie Tron) */
+            display: flex;                      /* Makes it easy to center content */
+            justify-content: center;            /* Centers content horizontally */
+            align-items: center;                /* Centers content vertically */
+            min-height: 100vh;                  /* Makes body at least full screen height (vh = viewport height) */
+            font-family: 'Courier New', monospace; /* Retro computer-style font */
+            color: #0ff;                        /* Cyan/light blue text color (hexadecimal color) */
+        }
+
+        /* Container that holds all our game elements */
+        #gameContainer {
+            text-align: center;                 /* Centers all text inside */
+        }
+
+        /* The CANVAS is where we draw the actual game */
+        canvas {
+            border: 2px solid #0ff;             /* Cyan border around game area */
+            box-shadow: 0 0 20px #0ff;          /* Glowing effect around the border */
+        }
+
+        /* Score display area above the game */
+        #scoreBoard {
+            margin-bottom: 20px;                /* Space between scores and game */
+            font-size: 24px;                    /* Large text for scores */
+            display: flex;                      /* Allows side-by-side arrangement */
+            justify-content: space-around;      /* Evenly spaces the two scores */
+            min-width: 600px;                   /* Minimum width to prevent cramping */
+        }
+
+        /* Player 1's score styling (cyan/blue) */
+        .player1 {
+            color: #0ff;                        /* Cyan color */
+            text-shadow: 0 0 10px #0ff;         /* Glowing text effect */
+        }
+
+        /* Player 2's score styling (magenta/pink) */
+        .player2 {
+            color: #f0f;                        /* Magenta color */
+            text-shadow: 0 0 10px #f0f;         /* Glowing text effect */
+        }
+
+        /* Game over popup that appears when someone wins/loses */
+        #gameOver {
+            position: absolute;                 /* Can be positioned anywhere */
+            top: 50%;                          /* Start at middle of screen vertically */
+            left: 50%;                         /* Start at middle of screen horizontally */
+            transform: translate(-50%, -50%);  /* Center it perfectly (shifts back by half its size) */
+            background: rgba(0, 0, 0, 0.9);    /* Semi-transparent black (0.9 = 90% opaque) */
+            padding: 30px;                     /* Space inside the box */
+            border: 2px solid #0ff;            /* Cyan border */
+            display: none;                     /* Hidden by default (shown by JavaScript) */
+            text-align: center;                /* Center the text inside */
+        }
+
+        /* The "Game Over" title text */
+        #gameOver h2 {
+            font-size: 36px;                   /* Large text size */
+            margin: 10px 0;                    /* Small spacing above and below */
+        }
+
+        /* Style for the "Play Again" button */
+        button {
+            background: #000;                   /* Black background */
+            color: #0ff;                       /* Cyan text */
+            border: 2px solid #0ff;            /* Cyan border */
+            padding: 10px 20px;                /* Space inside button */
+            font-size: 18px;                   /* Text size */
+            cursor: pointer;                   /* Shows hand cursor on hover */
+            margin-top: 20px;                  /* Space above button */
+            font-family: 'Courier New', monospace; /* Match game font */
+        }
+
+        /* What happens when mouse hovers over button */
+        button:hover {
+            background: #0ff;                  /* Inverts colors - cyan background */
+            color: #000;                       /* Black text */
+            box-shadow: 0 0 10px #0ff;         /* Glowing effect */
+        }
+
+        /* Control instructions below the game */
+        #instructions {
+            margin-top: 20px;                  /* Space above instructions */
+            font-size: 14px;                   /* Smaller text */
+            color: #666;                       /* Gray color (less prominent) */
+        }
+    </style>
+</head>
+<body>
+    <!-- The main game container that holds everything -->
+    <div id="gameContainer">
+        <!-- Score display area -->
+        <div id="scoreBoard">
+            <!-- Player 1's score (cyan color) -->
+            <div class="player1">Player 1: <span id="score1">0</span></div>
+            <!-- Player 2's score (magenta color) -->
+            <div class="player2">Player 2: <span id="score2">0</span></div>
+        </div>
+        <!-- The actual game drawing area (sized by JavaScript) -->
+        <canvas id="gameCanvas"></canvas>
+        <!-- Instructions for controlling each player -->
+        <div id="instructions">
+            <!-- W/A/S/D are keyboard keys for Player 1, Arrow keys for Player 2 -->
+            Player 1 (Cyan): W A S D | Player 2 (Magenta): Arrow Keys
+        </div>
+    </div>
+
+    <!-- This popup appears when the game ends (hidden initially) -->
+    <div id="gameOver">
+        <!-- The text changes to show who won -->
+        <h2 id="winnerText">Game Over!</h2>
+        <!-- Button calls the resetGame() function when clicked -->
+        <button onclick="resetGame()">Play Again</button>
+        <!-- Alternative keyboard shortcut -->
+        <p style="margin-top: 15px; color: #666;">Press Spacebar to play again</p>
+    </div>
+
+    <!-- This loads and runs the JavaScript game code -->
+    <script src="tron.js"></script>
+</body>
+</html>
