@@ -608,10 +608,16 @@ async function loadAresStats() {
             console.log('Could not verify game count:', error);
         }
 
-        // Count total decisions from recent games
-        const gamesResponse = await fetch('http://localhost:3000/api/games/recent/50');
-        const games = await gamesResponse.json();
-        aresStats.totalDecisions = games.reduce((total, game) => {
+        // Count total decisions from all games (reuse the games data from above)
+        let allGames = [];
+        try {
+            const allGamesResponse = await fetch('http://localhost:3000/api/games/recent/1000');
+            allGames = await allGamesResponse.json();
+        } catch (error) {
+            console.log('Could not load all games for decision count:', error);
+        }
+
+        aresStats.totalDecisions = allGames.reduce((total, game) => {
             return total + (game.frames ? game.frames.length : 0);
         }, 0);
 
