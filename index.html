@@ -104,6 +104,277 @@
             font-size: 14px;                   /* Smaller text */
             color: #666;                       /* Gray color (less prominent) */
         }
+
+        /* Intro screen styling */
+        #introScreen {
+            position: fixed;                    /* Cover entire screen */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);    /* Dark semi-transparent background */
+            display: flex;                      /* Center content */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;                      /* Above everything else */
+        }
+
+        /* Main title styling */
+        #introScreen h1 {
+            font-size: 72px;                    /* Large title */
+            margin: 0 0 20px 0;
+            color: #0ff;
+            text-shadow: 0 0 20px #0ff,         /* Multiple shadows for glow */
+                         0 0 40px #0ff,
+                         0 0 60px #0ff;
+            letter-spacing: 10px;                /* Spread out letters */
+            animation: pulse 2s ease-in-out infinite; /* Pulsing animation */
+        }
+
+        /* Pulsing animation for title */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Intro content container */
+        .intro-content {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .intro-content p {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #999;
+        }
+
+        /* Controls display area */
+        .controls-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px 0;
+            gap: 60px;
+        }
+
+        .player-controls {
+            padding: 20px;
+            border: 1px solid #333;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .player-controls h3 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+        }
+
+        .player-controls p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* Start button styling */
+        #startButton {
+            background: #000;
+            color: #0ff;
+            border: 2px solid #0ff;
+            padding: 15px 40px;
+            font-size: 24px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+        }
+
+        #startButton:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 20px #0ff;
+            transform: scale(1.05);
+        }
+
+        .start-hint {
+            margin-top: 20px !important;
+            font-size: 14px !important;
+            color: #666 !important;
+            font-style: italic;
+        }
+
+        /* Game mode selection styles */
+        .game-modes {
+            margin: 30px 0;
+        }
+
+        .game-modes h2 {
+            font-size: 24px;
+            color: #0ff;
+            margin-bottom: 20px;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .mode-button {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #333;
+            padding: 20px 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 150px;
+        }
+
+        .mode-button:hover {
+            border-color: #0ff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .mode-button.selected {
+            border-color: #0ff;
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .mode-title {
+            display: block;
+            font-size: 20px;
+            color: #0ff;
+            margin-bottom: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .mode-desc {
+            display: block;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .ai-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #f0f;
+            color: #000;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 3px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        #startButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #startButton:not(:disabled):hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 20px #0ff;
+            transform: scale(1.05);
+        }
+
+        /* Ares AI Statistics Panel */
+        #aresStats {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 280px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0ff;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        #aresStats h3 {
+            margin: 0 0 15px 0;
+            color: #0ff;
+            text-align: center;
+            font-size: 18px;
+            text-shadow: 0 0 10px #0ff;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .stat-value {
+            color: #0ff;
+            font-weight: bold;
+            font-size: 12px;
+            text-shadow: 0 0 5px #0ff;
+        }
+
+        .stat-value.highlight {
+            color: #f0f;
+            text-shadow: 0 0 5px #f0f;
+            animation: statPulse 0.5s ease-in-out;
+        }
+
+        @keyframes statPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* Hide stats panel when game container is not visible */
+        #gameContainer:not(.ares-mode) ~ #aresStats {
+            display: none !important;
+        }
+
+        /* Export section styling */
+        .export-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+            text-align: center;
+        }
+
+        .export-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #0ff;
+            color: #0ff;
+            padding: 8px 16px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .export-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .export-btn:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
@@ -125,6 +396,85 @@
         </div>
     </div>
 
+    <!-- Ares AI Statistics Panel (only visible in Ares mode) -->
+    <div id="aresStats" style="display: none;">
+        <h3>🤖 ARES AI STATS</h3>
+        <div class="stat-item">
+            <span class="stat-label">Games Played:</span>
+            <span class="stat-value" id="gamesPlayed">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Win Rate:</span>
+            <span class="stat-value" id="winRate">0%</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Decisions Learned:</span>
+            <span class="stat-value" id="decisionsLearned">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Exploration Rate:</span>
+            <span class="stat-value" id="explorationRate">10%</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Avg Survival:</span>
+            <span class="stat-value" id="avgSurvival">0s</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Last Death:</span>
+            <span class="stat-value" id="lastDeath">-</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Model Version:</span>
+            <span class="stat-value" id="modelVersion">1</span>
+        </div>
+        <div class="export-section">
+            <button id="exportCsvBtn" class="export-btn">📊 Export CSV</button>
+        </div>
+    </div>
+
+    <!-- Intro screen that appears when the page loads -->
+    <div id="introScreen">
+        <h1>TRON</h1>
+        <div class="intro-content">
+            <p>A classic light cycle battle game</p>
+
+            <!-- Game mode selection -->
+            <div class="game-modes">
+                <h2>Select Game Mode</h2>
+                <div class="mode-buttons">
+                    <button class="mode-button" data-mode="2player">
+                        <span class="mode-title">2 PLAYER</span>
+                        <span class="mode-desc">Human vs Human</span>
+                    </button>
+                    <button class="mode-button" data-mode="ares">
+                        <span class="mode-title">VS ARES</span>
+                        <span class="mode-desc">Human vs AI</span>
+                        <span class="ai-badge">ML Powered</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="controls-info" id="controlsInfo">
+                <div class="player-controls">
+                    <h3 class="player1">Player 1 (Cyan)</h3>
+                    <p>W - Up</p>
+                    <p>A - Left</p>
+                    <p>S - Down</p>
+                    <p>D - Right</p>
+                </div>
+                <div class="player-controls" id="player2Controls">
+                    <h3 class="player2">Player 2 (Magenta)</h3>
+                    <p>↑ - Up</p>
+                    <p>← - Left</p>
+                    <p>↓ - Down</p>
+                    <p>→ - Right</p>
+                </div>
+            </div>
+            <button id="startButton" disabled>Select a Game Mode</button>
+            <p class="start-hint">After selecting mode: Press SPACEBAR, P, or click Start to begin</p>
+        </div>
+    </div>
+
     <!-- This popup appears when the game ends (hidden initially) -->
     <div id="gameOver">
         <!-- The text changes to show who won -->
@@ -136,6 +486,7 @@
     </div>
 
     <!-- This loads and runs the JavaScript game code -->
+    <script src="ares.js"></script>
     <script src="tron.js"></script>
 </body>
 </html>

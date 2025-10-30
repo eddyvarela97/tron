@@ -33,8 +33,34 @@ canvas.height = GRID_SIZE;  // 600 pixels tall
 // Is the game currently playing? (true = yes, false = no)
 let gameRunning = false;
 
+// Has the game been started at least once? (for intro screen)
+let gameStarted = false;
+
+// Game mode: '2player' or 'ares'
+let gameMode = null;
+
+// Ares AI bot instance
+let aresBot = null;
+
 // This will store the ID of our animation (used to stop the game later)
 let animationId = null;
+
+// Game recording for training
+let gameRecording = {
+    frames: [],
+    startTime: null,
+    winner: null,
+    deathCause: null
+};
+
+// Statistics tracking
+let aresStats = {
+    gamesPlayed: 0,
+    wins: 0,
+    totalDecisions: 0,
+    totalSurvivalTime: 0,
+    modelVersion: 1
+};
 
 // PLAYER DATA - Information about each player's light cycle
 // ==========================================================
@@ -86,7 +112,17 @@ const keys = {
 
 // This "listens" for when any key is pressed down
 document.addEventListener('keydown', (e) => {
-    // Check if spacebar was pressed (spacebar restarts the game)
+    // Check if game hasn't started yet (intro screen is showing)
+    if (!gameStarted) {
+        // Check if spacebar or P key was pressed to start the game
+        if (e.key === ' ' || e.key.toLowerCase() === 'p') {
+            startGameFromIntro();
+            e.preventDefault();
+        }
+        return;  // Don't process other keys while intro is showing
+    }
+
+    // Check if spacebar was pressed (spacebar restarts the game after it's over)
     if (e.key === ' ') {
         // Only restart if game is not currently running
         if (!gameRunning) {
@@ -170,9 +206,55 @@ function handleInput() {
 
 // UPDATE PLAYER POSITION - Move the player and check for crashes
 // ===============================================================
-function updatePlayer(player) {
+function updatePlayer(player, isAres = false) {
     // If player already crashed, don't update them anymore
     if (!player.alive) return;
+
+    // If this is Ares AI, make decision
+    if (isAres && gameMode === 'ares' && aresBot) {
+        const gameState = {
+            x: player.x,
+            y: player.y,
+            dx: player.dx,
+            dy: player.dy,
+            grid: createGridFromTrails(),
+            playerX: players.player1.x,
+            playerY: players.player1.y,
+            playerDx: players.player1.dx,
+            playerDy: players.player1.dy
+        };
+
+        const decision = aresBot.makeDecision(gameState);
+
+        // Apply decision
+        if (decision === 'up' && player.dy === 0) {
+            player.dx = 0;
+            player.dy = -1;
+        } else if (decision === 'down' && player.dy === 0) {
+            player.dx = 0;
+            player.dy = 1;
+        } else if (decision === 'left' && player.dx === 0) {
+            player.dx = -1;
+            player.dy = 0;
+        } else if (decision === 'right' && player.dx === 0) {
+            player.dx = 1;
+            player.dy = 0;
+        }
+
+        // Record frame for training
+        if (gameRecording.startTime) {
+            gameRecording.frames.push({
+                timestamp: Date.now() - gameRecording.startTime,
+                aresDecision: {
+                    action: ['right', 'left', 'down', 'up'].indexOf(decision),
+                    position: { x: player.x, y: player.y }
+                },
+                gameState: {
+                    features: aresBot.extractFeatures(gameState)
+                }
+            });
+        }
+    }
 
     // Add current position to the trail (before moving)
     // This creates the "light wall" behind the player
@@ -191,6 +273,9 @@ function updatePlayer(player) {
         player.y < 0 ||                    // Hit top wall
         player.y >= GRID_CELLS) {          // Hit bottom wall
         player.alive = false;  // Player crashed!
+        if (isAres) {
+            gameRecording.deathCause = 'wall';
+        }
     }
 
     // Check if player hit Player 1's trail (including their own if they are Player 1)
@@ -199,6 +284,9 @@ function updatePlayer(player) {
         // If player's position matches any trail segment position
         if (player.x === segment.x && player.y === segment.y) {
             player.alive = false;  // Player crashed into the trail!
+            if (isAres) {
+                gameRecording.deathCause = 'enemy_trail';
+            }
         }
     }
 
@@ -206,6 +294,9 @@ function updatePlayer(player) {
     for (let segment of players.player2.trail) {
         if (player.x === segment.x && player.y === segment.y) {
             player.alive = false;  // Player crashed into the trail!
+            if (isAres) {
+                gameRecording.deathCause = 'own_trail';
+            }
         }
     }
 }
@@ -289,6 +380,34 @@ function drawPlayer(player) {
     ctx.shadowBlur = 0;  // Turn off glow effect (clean up for next drawing)
 }
 
+// CREATE GRID FROM TRAILS - Helper function for AI
+// =================================================
+function createGridFromTrails() {
+    const grid = [];
+    for (let y = 0; y < GRID_CELLS; y++) {
+        grid[y] = [];
+        for (let x = 0; x < GRID_CELLS; x++) {
+            grid[y][x] = false;
+        }
+    }
+
+    // Mark all trail positions as occupied
+    for (const segment of players.player1.trail) {
+        if (segment.x >= 0 && segment.x < GRID_CELLS &&
+            segment.y >= 0 && segment.y < GRID_CELLS) {
+            grid[segment.y][segment.x] = true;
+        }
+    }
+    for (const segment of players.player2.trail) {
+        if (segment.x >= 0 && segment.x < GRID_CELLS &&
+            segment.y >= 0 && segment.y < GRID_CELLS) {
+            grid[segment.y][segment.x] = true;
+        }
+    }
+
+    return grid;
+}
+
 // CHECK IF GAME IS OVER - See if someone crashed and handle ending
 // =================================================================
 function checkGameOver() {
@@ -316,6 +435,24 @@ function checkGameOver() {
         document.getElementById('score2').textContent = players.player2.score;
         document.getElementById('winnerText').textContent = winnerText;
 
+        // Record game data for Ares AI training
+        if (gameMode === 'ares' && aresBot) {
+            gameRecording.winner = players.player1.alive ? 'player' : 'ares';
+            gameRecording.duration = Date.now() - gameRecording.startTime;
+
+            // Update Ares bot with game result
+            aresBot.recordDeath(
+                gameRecording.deathCause || 'unknown',
+                {
+                    winner: gameRecording.winner,
+                    survivalTime: gameRecording.duration
+                }
+            );
+
+            // Save game data and update model
+            saveGameData();
+        }
+
         // Show the game over popup (was hidden with display: none)
         document.getElementById('gameOver').style.display = 'block';
 
@@ -342,7 +479,7 @@ function gameLoop() {
 
     // 2. Move both players based on their direction
     updatePlayer(players.player1);
-    updatePlayer(players.player2);
+    updatePlayer(players.player2, gameMode === 'ares');
 
     // 3. DRAWING SEQUENCE (clear screen, then draw everything)
     drawGrid();                 // Draw background and grid
@@ -387,12 +524,298 @@ function resetGame() {
     // Hide the "Game Over" popup
     document.getElementById('gameOver').style.display = 'none';
 
+    // Reset game recording
+    gameRecording = {
+        frames: [],
+        startTime: Date.now(),
+        winner: null,
+        deathCause: null
+    };
+
+    // Reset Ares bot if in Ares mode
+    if (gameMode === 'ares' && aresBot) {
+        aresBot.reset();
+    }
+
     // Start the game
     gameRunning = true;  // Set game state to running
     gameLoop();          // Start the game loop
 }
 
-// START THE FIRST GAME AUTOMATICALLY
-// ===================================
-// This line runs when the page first loads
-resetGame();
+// UPDATE ARES STATISTICS DISPLAY
+// ===============================
+function updateAresStatsDisplay() {
+    if (gameMode !== 'ares') return;
+
+    const winRate = aresStats.gamesPlayed > 0 ?
+        Math.round((aresStats.wins / aresStats.gamesPlayed) * 100) : 0;
+
+    const avgSurvival = aresStats.gamesPlayed > 0 ?
+        Math.round(aresStats.totalSurvivalTime / aresStats.gamesPlayed / 1000) : 0;
+
+    // Update display elements
+    document.getElementById('gamesPlayed').textContent = aresStats.gamesPlayed;
+    document.getElementById('winRate').textContent = winRate + '%';
+    document.getElementById('decisionsLearned').textContent = aresStats.totalDecisions;
+    document.getElementById('avgSurvival').textContent = avgSurvival + 's';
+    document.getElementById('modelVersion').textContent = aresStats.modelVersion;
+
+    // Update exploration rate (decreases as AI learns)
+    const epsilon = Math.max(0.05, 0.1 - (aresStats.gamesPlayed * 0.01));
+    document.getElementById('explorationRate').textContent = Math.round(epsilon * 100) + '%';
+
+    // Update last death cause
+    const lastDeath = gameRecording.deathCause || '-';
+    const deathDisplay = lastDeath.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    document.getElementById('lastDeath').textContent = deathDisplay;
+}
+
+// HIGHLIGHT STAT UPDATE
+// =====================
+function highlightStat(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.classList.add('highlight');
+        setTimeout(() => element.classList.remove('highlight'), 500);
+    }
+}
+
+// LOAD ARES STATISTICS FROM SERVER
+// =================================
+async function loadAresStats() {
+    try {
+        const response = await fetch('http://localhost:3000/api/model');
+        const modelData = await response.json();
+
+        if (modelData.stats) {
+            aresStats.gamesPlayed = modelData.stats.gamesPlayed || 0;
+            aresStats.wins = modelData.stats.wins || 0;
+            aresStats.totalSurvivalTime = modelData.stats.avgSurvivalTime * aresStats.gamesPlayed || 0;
+            aresStats.modelVersion = modelData.version || 1;
+        }
+
+        // Also get actual file count to ensure accuracy
+        try {
+            const gamesResponse = await fetch('http://localhost:3000/api/games/recent/1000');
+            const games = await gamesResponse.json();
+            const actualGameCount = games.length;
+
+            // Use the higher count (file count vs stored count) to handle any sync issues
+            if (actualGameCount > aresStats.gamesPlayed) {
+                aresStats.gamesPlayed = actualGameCount;
+            }
+        } catch (error) {
+            console.log('Could not verify game count:', error);
+        }
+
+        // Count total decisions from recent games
+        const gamesResponse = await fetch('http://localhost:3000/api/games/recent/50');
+        const games = await gamesResponse.json();
+        aresStats.totalDecisions = games.reduce((total, game) => {
+            return total + (game.frames ? game.frames.length : 0);
+        }, 0);
+
+        updateAresStatsDisplay();
+    } catch (error) {
+        console.log('Could not load Ares stats:', error);
+    }
+}
+
+// SAVE GAME DATA - Send training data to server
+// ==============================================
+async function saveGameData() {
+    try {
+        const gameData = {
+            mode: gameMode,
+            winner: gameRecording.winner,
+            duration: gameRecording.duration,
+            deathCause: gameRecording.deathCause,
+            frames: gameRecording.frames,
+            aresData: aresBot ? aresBot.getTrainingData() : null
+        };
+
+        const response = await fetch('http://localhost:3000/api/games', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gameData)
+        });
+
+        if (response.ok) {
+            console.log('Game data saved successfully');
+
+            // Update local stats to match server
+            aresStats.gamesPlayed++; // Increment since we just played a game
+            if (gameRecording.winner === 'ares') {
+                aresStats.wins++;
+            }
+            aresStats.totalDecisions += aresBot.decisionHistory.length;
+            aresStats.totalSurvivalTime += gameRecording.duration;
+
+            // Highlight updated stats
+            highlightStat('gamesPlayed');
+            highlightStat('decisionsLearned');
+            if (gameRecording.winner === 'ares') {
+                highlightStat('winRate');
+            }
+
+            // Update display
+            updateAresStatsDisplay();
+
+            // Optionally update model with new training data
+            await updateAresModel();
+        }
+    } catch (error) {
+        console.log('Could not save game data:', error);
+    }
+}
+
+// UPDATE ARES MODEL - Retrain with recent games
+// ==============================================
+async function updateAresModel() {
+    try {
+        if (!aresBot) return;
+
+        // Train the bot with its decision history
+        const trainingData = aresBot.decisionHistory;
+        if (trainingData.length > 0) {
+            aresBot.updateWeights(trainingData);
+            console.log(`Ares learned from ${trainingData.length} decisions`);
+        }
+
+        // Save updated model weights to server
+        const response = await fetch('http://localhost:3000/api/model', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                weights: aresBot.weights,
+                stats: {
+                    lastGameResult: gameRecording.winner,
+                    lastGameDuration: gameRecording.duration,
+                    gamesPlayed: (await getModelStats()).gamesPlayed + 1
+                }
+            })
+        });
+
+        if (response.ok) {
+            console.log('Model weights updated and saved');
+            aresStats.modelVersion++;
+            highlightStat('modelVersion');
+            updateAresStatsDisplay();
+        }
+    } catch (error) {
+        console.log('Could not update model:', error);
+    }
+}
+
+// GET MODEL STATS - Helper function
+// ==================================
+async function getModelStats() {
+    try {
+        const response = await fetch('http://localhost:3000/api/model');
+        const model = await response.json();
+        return model.stats || { gamesPlayed: 0 };
+    } catch (error) {
+        return { gamesPlayed: 0 };
+    }
+}
+
+// START GAME FROM INTRO - Handles first game start
+// ==================================================
+function startGameFromIntro() {
+    // Check if a game mode is selected
+    if (!gameMode) {
+        alert('Please select a game mode first!');
+        return;
+    }
+
+    // Hide the intro screen
+    document.getElementById('introScreen').style.display = 'none';
+
+    // Mark that the game has been started
+    gameStarted = true;
+
+    // Initialize Ares bot if in Ares mode
+    if (gameMode === 'ares') {
+        aresBot = new AresBot();
+        // Update UI for single player
+        document.getElementById('score2').parentElement.innerHTML =
+            '<div class="player2">Ares AI: <span id="score2">0</span></div>';
+
+        // Show stats panel and load initial stats
+        document.getElementById('aresStats').style.display = 'block';
+        document.getElementById('gameContainer').classList.add('ares-mode');
+        loadAresStats();
+    }
+
+    // Start the first game
+    resetGame();
+}
+
+// INITIALIZE ON PAGE LOAD
+// ========================
+// Set up the start button click handler when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Add click handler to the start button
+    const startButton = document.getElementById('startButton');
+    if (startButton) {
+        startButton.addEventListener('click', startGameFromIntro);
+    }
+
+    // Add mode selection handlers
+    const modeButtons = document.querySelectorAll('.mode-button');
+    modeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove selected class from all buttons
+            modeButtons.forEach(btn => btn.classList.remove('selected'));
+            // Add selected class to clicked button
+            button.classList.add('selected');
+
+            // Set game mode
+            gameMode = button.dataset.mode;
+
+            // Update UI based on mode
+            const player2Controls = document.getElementById('player2Controls');
+            const startBtn = document.getElementById('startButton');
+
+            if (gameMode === 'ares') {
+                player2Controls.innerHTML = `
+                    <h3 class="player2">Ares AI (Magenta)</h3>
+                    <p>🤖 Machine Learning</p>
+                    <p>🎯 Real-time decisions</p>
+                    <p>📈 Learns from games</p>
+                `;
+                startBtn.textContent = 'Challenge Ares';
+            } else {
+                player2Controls.innerHTML = `
+                    <h3 class="player2">Player 2 (Magenta)</h3>
+                    <p>↑ - Up</p>
+                    <p>← - Left</p>
+                    <p>↓ - Down</p>
+                    <p>→ - Right</p>
+                `;
+                startBtn.textContent = 'Start Game';
+                // Hide stats panel for 2-player mode
+                document.getElementById('aresStats').style.display = 'none';
+                document.getElementById('gameContainer').classList.remove('ares-mode');
+            }
+
+            startBtn.disabled = false;
+        });
+    });
+
+    // Add export CSV button handler
+    const exportBtn = document.getElementById('exportCsvBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            // Open CSV download in new tab
+            window.open('http://localhost:3000/api/export/csv', '_blank');
+        });
+    }
+
+    // Draw the initial grid (visible behind intro screen)
+    drawGrid();
+});
