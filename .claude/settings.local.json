@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git log --all --oneline --grep=\"arrow\\|control\\|key\" -i)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
