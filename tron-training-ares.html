@@ -1,161 +1,191 @@
 <!DOCTYPE html>
+<!-- TRON TRAINING ARES - Visual splash/loading screen -->
+<!-- This page displays a stylized "Training Ares" screen with animated effects -->
+<!-- It's designed to look like a futuristic AI training interface from the Tron universe -->
 <html lang="en">
 <head>
+    <!-- Standard HTML5 meta tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tron: Training Ares</title>
+
+    <!-- ALL VISUAL STYLING - CSS defines the look and animations -->
     <style>
+        /* BODY STYLING - Main page container */
         body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Courier New', monospace;
-            color: #0ff;
-            overflow: hidden;
+            margin: 0;                          /* Remove default spacing */
+            padding: 0;                         /* Remove default padding */
+            background: #000;                   /* Pure black background */
+            display: flex;                      /* Use flexbox for centering */
+            justify-content: center;            /* Center horizontally */
+            align-items: center;                /* Center vertically */
+            min-height: 100vh;                  /* Full viewport height */
+            font-family: 'Courier New', monospace; /* Retro computer font */
+            color: #0ff;                        /* Cyan text color (Tron theme) */
+            overflow: hidden;                   /* Hide scrollbars */
         }
 
+        /* MAIN CONTENT CONTAINER */
         .container {
-            text-align: center;
-            position: relative;
+            text-align: center;                 /* Center all text */
+            position: relative;                 /* Allow absolute positioning of child elements */
         }
 
-        /* Main title styling */
+        /* MAIN TITLE - "TRON" text */
         h1 {
-            font-size: 72px;
-            margin: 0 0 20px 0;
-            color: #0ff;
-            text-shadow: 0 0 20px #0ff,
-                         0 0 40px #0ff,
-                         0 0 60px #0ff;
-            letter-spacing: 10px;
-            animation: pulse 2s ease-in-out infinite;
+            font-size: 72px;                    /* Very large text */
+            margin: 0 0 20px 0;                 /* Space below title */
+            color: #0ff;                        /* Cyan color */
+            text-shadow: 0 0 20px #0ff,         /* Multiple glowing shadows for neon effect */
+                         0 0 40px #0ff,         /* Creates a bright glowing aura */
+                         0 0 60px #0ff;         /* Extends the glow further out */
+            letter-spacing: 10px;                /* Space out the letters widely */
+            animation: pulse 2s ease-in-out infinite; /* Apply pulsing animation (defined below) */
         }
 
-        /* Subtitle styling */
+        /* SUBTITLE - "TRAINING ARES" text */
         .subtitle {
-            font-size: 32px;
-            color: #f0f;
-            text-shadow: 0 0 15px #f0f,
-                         0 0 30px #f0f;
-            letter-spacing: 5px;
-            margin-bottom: 40px;
-            animation: glow 3s ease-in-out infinite alternate;
+            font-size: 32px;                    /* Large but smaller than title */
+            color: #f0f;                        /* Magenta color (contrasts with cyan) */
+            text-shadow: 0 0 15px #f0f,         /* Magenta glow effect */
+                         0 0 30px #f0f;         /* Double-layer glow for intensity */
+            letter-spacing: 5px;                /* Spread out letters */
+            margin-bottom: 40px;                /* Space below subtitle */
+            animation: glow 3s ease-in-out infinite alternate; /* Apply glowing animation */
         }
 
-        /* Pulsing animation for title */
+        /* PULSE ANIMATION - Makes title fade in and out slowly */
+        /* Used on the "TRON" title */
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% { opacity: 1; }            /* Fully visible at start and end */
+            50% { opacity: 0.7; }               /* Slightly faded in the middle */
         }
 
-        /* Glowing animation for subtitle */
+        /* GLOW ANIMATION - Makes subtitle's glow intensity increase and decrease */
+        /* Used on the "TRAINING ARES" subtitle */
         @keyframes glow {
             0% {
+                /* Starting glow intensity (dimmer) */
                 text-shadow: 0 0 15px #f0f,
                              0 0 30px #f0f;
             }
             100% {
+                /* Ending glow intensity (brighter with more layers) */
                 text-shadow: 0 0 25px #f0f,
                              0 0 50px #f0f,
                              0 0 75px #f0f;
             }
+            /* 'alternate' makes it go back and forth between these states */
         }
 
-        /* Decorative frame */
+        /* DECORATIVE FRAME - Border around content */
+        /* Creates a futuristic framed look around the title and subtitle */
         .frame {
-            position: absolute;
-            top: -50px;
-            left: -50px;
-            right: -50px;
-            bottom: -50px;
-            border: 2px solid #0ff;
-            box-shadow: 0 0 20px #0ff,
-                        inset 0 0 20px rgba(0, 255, 255, 0.1);
-            pointer-events: none;
+            position: absolute;                 /* Position relative to parent container */
+            top: -50px;                        /* Extend 50px above content */
+            left: -50px;                       /* Extend 50px left of content */
+            right: -50px;                      /* Extend 50px right of content */
+            bottom: -50px;                     /* Extend 50px below content */
+            border: 2px solid #0ff;            /* Cyan border line */
+            box-shadow: 0 0 20px #0ff,         /* Outer glow effect */
+                        inset 0 0 20px rgba(0, 255, 255, 0.1); /* Inner glow (subtle) */
+            pointer-events: none;              /* Don't block mouse clicks */
         }
 
-        /* Corner decorations */
+        /* CORNER DECORATIONS - Small accent boxes in each corner */
+        /* Creates a sci-fi "interface panel" look */
         .corner {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border: 2px solid #0ff;
+            position: absolute;                 /* Position anywhere on screen */
+            width: 40px;                       /* Small square */
+            height: 40px;                      /* Small square */
+            border: 2px solid #0ff;            /* Cyan border */
         }
 
+        /* TOP-LEFT CORNER - Only show top and left borders */
         .corner.top-left {
-            top: -52px;
+            top: -52px;                        /* Position at top-left of frame */
             left: -52px;
-            border-right: none;
-            border-bottom: none;
-            box-shadow: -5px -5px 10px #0ff;
+            border-right: none;                /* Remove right border */
+            border-bottom: none;               /* Remove bottom border */
+            box-shadow: -5px -5px 10px #0ff;  /* Glow toward top-left */
         }
 
+        /* TOP-RIGHT CORNER - Only show top and right borders */
         .corner.top-right {
-            top: -52px;
+            top: -52px;                        /* Position at top-right of frame */
             right: -52px;
-            border-left: none;
-            border-bottom: none;
-            box-shadow: 5px -5px 10px #0ff;
+            border-left: none;                 /* Remove left border */
+            border-bottom: none;               /* Remove bottom border */
+            box-shadow: 5px -5px 10px #0ff;   /* Glow toward top-right */
         }
 
+        /* BOTTOM-LEFT CORNER - Only show bottom and left borders */
         .corner.bottom-left {
-            bottom: -52px;
+            bottom: -52px;                     /* Position at bottom-left of frame */
             left: -52px;
-            border-right: none;
-            border-top: none;
-            box-shadow: -5px 5px 10px #0ff;
+            border-right: none;                /* Remove right border */
+            border-top: none;                  /* Remove top border */
+            box-shadow: -5px 5px 10px #0ff;   /* Glow toward bottom-left */
         }
 
+        /* BOTTOM-RIGHT CORNER - Only show bottom and right borders */
         .corner.bottom-right {
-            bottom: -52px;
+            bottom: -52px;                     /* Position at bottom-right of frame */
             right: -52px;
-            border-left: none;
-            border-top: none;
-            box-shadow: 5px 5px 10px #0ff;
+            border-left: none;                 /* Remove left border */
+            border-top: none;                  /* Remove top border */
+            box-shadow: 5px 5px 10px #0ff;    /* Glow toward bottom-right */
         }
 
-        /* Status indicator */
+        /* STATUS INDICATOR - "SYSTEM READY" text at bottom */
+        /* Displays system status with blinking animation */
         .status {
-            position: absolute;
-            bottom: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px;
-            color: #666;
-            letter-spacing: 2px;
-            animation: blink 2s ease-in-out infinite;
+            position: absolute;                 /* Position relative to container */
+            bottom: -100px;                    /* Position below the frame */
+            left: 50%;                         /* Start at horizontal center */
+            transform: translateX(-50%);       /* Shift back by half its width to truly center */
+            font-size: 14px;                   /* Small text */
+            color: #666;                       /* Dark gray (subtle) */
+            letter-spacing: 2px;               /* Spread out letters */
+            animation: blink 2s ease-in-out infinite; /* Apply blinking animation */
         }
 
+        /* BLINK ANIMATION - Makes status text blink on and off */
+        /* Simulates a computer terminal cursor or status light */
         @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
+            0%, 50% { opacity: 1; }            /* Fully visible for first half */
+            51%, 100% { opacity: 0.3; }        /* Dimmed for second half */
         }
 
-        /* Grid overlay effect */
+        /* GRID OVERLAY - Background grid pattern effect */
+        /* Creates a digital/computerized background look */
         .grid-overlay {
-            position: fixed;
-            top: 0;
+            position: fixed;                    /* Fixed to viewport (doesn't scroll) */
+            top: 0;                            /* Cover entire screen */
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100%;                       /* Full width */
+            height: 100%;                      /* Full height */
             background-image:
+                /* Horizontal lines (cyan, very transparent) */
                 linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                /* Vertical lines (cyan, very transparent) */
                 linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            opacity: 0.3;
-            z-index: -1;
+            background-size: 50px 50px;        /* Grid squares are 50x50 pixels */
+            pointer-events: none;              /* Don't block mouse interactions */
+            opacity: 0.3;                      /* Make the grid subtle */
+            z-index: -1;                       /* Behind all other content */
         }
     </style>
 </head>
+
+<!-- BODY CONTENT - The actual HTML structure -->
 <body>
+    <!-- Background grid pattern layer -->
     <div class="grid-overlay"></div>
 
+    <!-- Main content container with frame and text -->
     <div class="container">
+        <!-- Decorative frame with glowing corners -->
         <div class="frame">
             <div class="corner top-left"></div>
             <div class="corner top-right"></div>
@@ -163,9 +193,13 @@
             <div class="corner bottom-right"></div>
         </div>
 
+        <!-- Main title -->
         <h1>TRON</h1>
+
+        <!-- Subtitle with AI training message -->
         <div class="subtitle">TRAINING ARES</div>
 
+        <!-- Status message at bottom -->
         <div class="status">SYSTEM READY</div>
     </div>
 </body>

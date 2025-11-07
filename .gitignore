@@ -1,0 +1,114 @@
+# ============================================================================
+# TRON ARES AI - GIT IGNORE FILE
+# ============================================================================
+# This file tells Git which files and folders to ignore (not track/commit)
+# Keeps the repository clean by excluding generated files, dependencies, etc.
+
+# NODE.JS DEPENDENCIES
+# ====================
+# node_modules/ contains all npm packages (can be huge!)
+# These can be reinstalled with "npm install" so no need to track them
+node_modules/
+
+# Logs and debugging files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# TRAINING DATA & AI MODEL
+# ========================
+# Game recordings and AI model weights
+# You may want to track these if collaborating, but they can get large
+# Comment out the lines below if you want to commit training data
+
+# All game recordings (can accumulate to hundreds of files)
+data/games/*.json
+
+# AI model weights file
+# Uncomment if you DON'T want to share the trained model
+# data/model/ares_model.json
+
+# Keep the directory structure but ignore contents
+# This ensures the folders exist when cloning the repo
+!data/games/.gitkeep
+!data/model/.gitkeep
+
+# SYSTEM FILES
+# ============
+# Operating system generated files
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# EDITOR & IDE FILES
+# ==================
+# Files created by code editors and IDEs
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.#*
+
+# TEMPORARY FILES
+# ===============
+# Temporary files that shouldn't be tracked
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Environment variables (may contain secrets!)
+.env
+.env.local
+.env.*.local
+
+# Claude Code settings (user-specific configuration)
+.claude/
+
+# OPTIONAL: KEEP SOME SAMPLE DATA
+# ================================
+# If you want to include a few sample games for demonstration,
+# you can add exceptions like:
+# !data/games/sample_game_1.json
+# !data/games/sample_game_2.json

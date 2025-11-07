@@ -1,50 +1,109 @@
+// TRON ARES AI SERVER - Backend API for game data and AI model persistence
+// ===========================================================================
+// This server provides REST API endpoints for:
+// - Loading and saving the AI model weights
+// - Storing game recordings for training data
+// - Retrieving training data for analysis
+// - Exporting games data to CSV format
+
+// DEPENDENCIES - Import required Node.js modules
+// ===============================================
+
+// Express: Fast, minimalist web framework for Node.js
 const express = require('express');
+
+// CORS: Cross-Origin Resource Sharing - allows browser to make requests to this server
 const cors = require('cors');
+
+// Body-parser: Middleware to parse incoming JSON request bodies
 const bodyParser = require('body-parser');
+
+// File System (Promises API): For reading/writing files asynchronously
 const fs = require('fs').promises;
+
+// Path: For working with file and directory paths
 const path = require('path');
 
+// SERVER SETUP
+// =============
+
+// Create Express application instance
 const app = express();
+
+// Port number the server will listen on
 const PORT = 3000;
 
-// Middleware
+// MIDDLEWARE CONFIGURATION
+// ========================
+// Middleware runs before your routes and can modify the request/response
+
+// Enable CORS - allows the game webpage to make API requests to this server
 app.use(cors());
+
+// Parse JSON bodies up to 50MB (game recordings can be large with many frames)
 app.use(bodyParser.json({ limit: '50mb' }));
+
+// Serve static files (HTML, JS, CSS) from current directory
+// This makes the game accessible at http://localhost:3000/index.html
 app.use(express.static('.'));
 
-// Ensure data directories exist
+// DATA DIRECTORY PATHS
+// ====================
+// Define where we'll store all persistent data
+
+// Main data directory: stores all game data and AI models
 const DATA_DIR = path.join(__dirname, 'data');
+
+// Games directory: stores individual game recordings as JSON files
 const GAMES_DIR = path.join(DATA_DIR, 'games');
+
+// Model directory: stores the AI neural network weights and config
 const MODEL_DIR = path.join(DATA_DIR, 'model');
 
+// INITIALIZE DATA DIRECTORIES
+// ============================
+// This function creates all required directories and initializes the model file if needed
+// Runs once when the server starts
 async function ensureDirectories() {
     try {
+        // Create directories if they don't exist
+        // { recursive: true } means it will create parent directories too (like mkdir -p)
         await fs.mkdir(DATA_DIR, { recursive: true });
         await fs.mkdir(GAMES_DIR, { recursive: true });
         await fs.mkdir(MODEL_DIR, { recursive: true });
 
-        // Initialize model file if it doesn't exist
+        // Check if model file exists, create initial model if not
         const modelPath = path.join(MODEL_DIR, 'ares_model.json');
         try {
+            // Try to access the file (throws error if doesn't exist)
             await fs.access(modelPath);
         } catch {
-            // Create initial model structure
+            // File doesn't exist - create initial model structure
             const initialModel = {
+                // Neural network weights (null = will be initialized randomly by AresBot)
                 weights: null,
+
+                // Neural network architecture configuration
                 config: {
-                    inputSize: 20,
-                    hiddenLayers: [64, 32],
-                    outputSize: 4,
-                    learningRate: 0.001
+                    inputSize: 20,           // Number of input features
+                    hiddenLayers: [64, 32],  // Two hidden layers with 64 and 32 neurons
+                    outputSize: 4,           // Four outputs (up, down, left, right)
+                    learningRate: 0.001      // How fast the AI learns from mistakes
                 },
+
+                // Training statistics
                 stats: {
-                    gamesPlayed: 0,
-                    wins: 0,
-                    losses: 0,
-                    avgSurvivalTime: 0
+                    gamesPlayed: 0,      // Total games played
+                    wins: 0,             // Games where Ares won
+                    losses: 0,           // Games where Ares lost
+                    avgSurvivalTime: 0   // Average time Ares survives (milliseconds)
                 },
+
+                // Model version (increments with each update)
                 version: 1
             };
+
+            // Write the initial model to disk as formatted JSON
             await fs.writeFile(modelPath, JSON.stringify(initialModel, null, 2));
         }
     } catch (error) {
@@ -52,13 +111,23 @@ async function ensureDirectories() {
     }
 }
 
-// API Routes
+// ============================================================================
+// API ROUTES - REST endpoints for the game frontend
+// ============================================================================
 
-// Get the current model
+// GET /api/model - Retrieve the current AI model
+// ================================================
+// Purpose: Load the saved neural network weights and configuration
+// Used by: AresBot on initialization to load trained weights
+// Returns: Complete model object with weights, config, stats, and version
 app.get('/api/model', async (req, res) => {
     try {
         const modelPath = path.join(MODEL_DIR, 'ares_model.json');
+
+        // Read the model file from disk
         const data = await fs.readFile(modelPath, 'utf8');
+
+        // Parse JSON and send to client
         res.json(JSON.parse(data));
     } catch (error) {
         console.error('Error reading model:', error);
@@ -66,21 +135,32 @@ app.get('/api/model', async (req, res) => {
     }
 });
 
-// Update the model
+// POST /api/model - Update the AI model
+// =======================================
+// Purpose: Save updated neural network weights after training
+// Used by: Game after each match to save improved AI weights
+// Request body: { weights: {...}, stats: {...}, etc. }
+// Returns: { success: true, version: <new_version_number> }
 app.post('/api/model', async (req, res) => {
     try {
         const modelPath = path.join(MODEL_DIR, 'ares_model.json');
+
+        // Read current model from disk
         const currentModel = JSON.parse(await fs.readFile(modelPath, 'utf8'));
 
-        // Merge updates with current model
+        // Merge incoming updates with current model
+        // Spread operator (...) combines objects
         const updatedModel = {
-            ...currentModel,
-            ...req.body,
-            version: currentModel.version + 1,
-            lastUpdated: new Date().toISOString()
+            ...currentModel,      // Keep existing fields
+            ...req.body,          // Override with new data from request
+            version: currentModel.version + 1,  // Increment version number
+            lastUpdated: new Date().toISOString()  // Add timestamp
         };
 
+        // Write updated model back to disk
         await fs.writeFile(modelPath, JSON.stringify(updatedModel, null, 2));
+
+        // Confirm success to client
         res.json({ success: true, version: updatedModel.version });
     } catch (error) {
         console.error('Error updating model:', error);
@@ -88,41 +168,56 @@ app.post('/api/model', async (req, res) => {
     }
 });
 
-// Save a game recording
+// POST /api/games - Save a game recording
+// =========================================
+// Purpose: Store complete game recording with all frame data for training
+// Used by: Game after each match completes
+// Request body: { mode, winner, duration, deathCause, frames[], aresData }
+// Returns: { success: true, gameId: <unique_id>, stats: {...} }
 app.post('/api/games', async (req, res) => {
     try {
         const gameData = req.body;
+
+        // Generate unique game ID
         const timestamp = Date.now();
+        // Create ID like: game_1234567890_abc123xyz
         const gameId = `game_${timestamp}_${Math.random().toString(36).substr(2, 9)}`;
         const filename = `${gameId}.json`;
         const filepath = path.join(GAMES_DIR, filename);
 
-        // Add metadata
+        // Add metadata to game data
         gameData.id = gameId;
         gameData.timestamp = timestamp;
         gameData.date = new Date().toISOString();
 
+        // Write game recording to disk
         await fs.writeFile(filepath, JSON.stringify(gameData, null, 2));
 
-        // Update model stats
+        // Update model statistics based on game outcome
         const modelPath = path.join(MODEL_DIR, 'ares_model.json');
         const model = JSON.parse(await fs.readFile(modelPath, 'utf8'));
 
+        // Increment games played counter
         model.stats.gamesPlayed++;
+
+        // Update win/loss counters
         if (gameData.winner === 'ares') {
             model.stats.wins++;
         } else if (gameData.winner === 'player') {
             model.stats.losses++;
         }
 
-        // Update average survival time
+        // Calculate new average survival time
+        // Formula: (old_avg * old_count + new_value) / new_count
         const survivalTime = gameData.aresData?.survivalTime || 0;
         model.stats.avgSurvivalTime =
             (model.stats.avgSurvivalTime * (model.stats.gamesPlayed - 1) + survivalTime)
             / model.stats.gamesPlayed;
 
+        // Save updated stats to model file
         await fs.writeFile(modelPath, JSON.stringify(model, null, 2));
 
+        // Send confirmation back to client with updated stats
         res.json({
             success: true,
             gameId: gameId,
@@ -134,24 +229,34 @@ app.post('/api/games', async (req, res) => {
     }
 });
 
-// Get recent games for training
+// GET /api/games/recent/:count - Retrieve recent games
+// ======================================================
+// Purpose: Get the N most recent game recordings for analysis
+// Used by: Statistics display to calculate metrics across recent games
+// URL parameter: count = number of games to retrieve (e.g., /api/games/recent/10)
+// Returns: Array of game objects, sorted newest first
 app.get('/api/games/recent/:count', async (req, res) => {
     try {
+        // Parse count from URL parameter (default to 10 if invalid)
         const count = parseInt(req.params.count) || 10;
+
+        // Read all filenames in games directory
         const files = await fs.readdir(GAMES_DIR);
 
-        // Sort by timestamp (newest first)
+        // Filter for JSON files, sort by name (which includes timestamp), take top N
         const gameFiles = files
-            .filter(f => f.endsWith('.json'))
-            .sort((a, b) => b.localeCompare(a))
-            .slice(0, count);
+            .filter(f => f.endsWith('.json'))            // Only JSON files
+            .sort((a, b) => b.localeCompare(a))          // Sort descending (newest first)
+            .slice(0, count);                            // Take only first N games
 
+        // Load and parse each game file
         const games = [];
         for (const file of gameFiles) {
             const data = await fs.readFile(path.join(GAMES_DIR, file), 'utf8');
             games.push(JSON.parse(data));
         }
 
+        // Return games array as JSON
         res.json(games);
     } catch (error) {
         console.error('Error reading games:', error);
@@ -159,29 +264,37 @@ app.get('/api/games/recent/:count', async (req, res) => {
     }
 });
 
-// Get training data from all games
+// GET /api/training-data - Extract all training samples from games
+// ==================================================================
+// Purpose: Convert game recordings into training samples for ML analysis
+// Used by: External training scripts or advanced analytics
+// Returns: Array of training samples with { input: features[], output: action, reward }
 app.get('/api/training-data', async (req, res) => {
     try {
         const files = await fs.readdir(GAMES_DIR);
         const trainingData = [];
 
+        // Process each game file
         for (const file of files.filter(f => f.endsWith('.json'))) {
             const data = JSON.parse(await fs.readFile(path.join(GAMES_DIR, file), 'utf8'));
 
             // Extract training samples from game frames
+            // Each frame contains a game state and the AI's decision
             if (data.frames && data.frames.length > 0) {
                 data.frames.forEach(frame => {
+                    // Only include frames with complete data
                     if (frame.aresDecision && frame.gameState) {
                         trainingData.push({
-                            input: frame.gameState.features,
-                            output: frame.aresDecision.action,
-                            reward: frame.aresDecision.reward || 0
+                            input: frame.gameState.features,      // 20-element feature vector
+                            output: frame.aresDecision.action,    // Action taken (0-3)
+                            reward: frame.aresDecision.reward || 0  // Reward received
                         });
                     }
                 });
             }
         }
 
+        // Return all training samples
         res.json(trainingData);
     } catch (error) {
         console.error('Error getting training data:', error);

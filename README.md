@@ -2,6 +2,12 @@
 
 A classic Tron light cycle game featuring an AI opponent powered by machine learning that learns from gameplay.
 
+## Prerequisites
+
+- **Node.js**: Version 14.x or higher
+- **npm**: Comes with Node.js
+- **Modern Web Browser**: Chrome, Firefox, Safari, or Edge (latest versions)
+
 ## Features
 
 ### 🎮 Game Modes
@@ -101,6 +107,29 @@ tron/
 - **POST /api/games** - Save game recording
 - **GET /api/games/recent/:count** - Get recent games
 - **GET /api/training-data** - Get training dataset
+- **GET /api/export/csv** - Export all games as CSV file
+
+## Statistics & Data Export
+
+### Real-time Statistics Panel
+When playing in VS Ares mode, a statistics panel displays:
+- **Games Played**: Total number of games completed
+- **Win Rate**: Percentage of games won by Ares
+- **Decisions Learned**: Total number of AI decisions recorded
+- **Exploration Rate**: Current random exploration percentage (decreases over time)
+- **Avg Survival**: Average time Ares survives per game
+- **Last Death**: Cause of death in the most recent game
+- **Model Version**: Current neural network version number
+
+### CSV Export
+Click the "Export CSV" button in the stats panel to download a spreadsheet with:
+- Game-by-game results
+- Duration and survival times
+- Win/loss statistics
+- Death cause analysis
+- Decision counts per game
+
+Perfect for analyzing AI learning progress in Excel, Google Sheets, or data visualization tools!
 
 ## Development
 
@@ -156,15 +185,100 @@ The AI improves through:
 - Minimal memory footprint for neural network
 - Asynchronous model updates don't block gameplay
 
+## Playing Tips
+
+### Against Ares AI
+- **Early Game**: Give yourself space - Ares needs room to maneuver
+- **Corner Ares**: Try to trap it against walls or in tight spaces
+- **Watch Patterns**: Ares learns over time, so strategies that worked early may not work later
+- **Use the Edges**: Control the perimeter to limit Ares's options
+- **Be Unpredictable**: Ares adapts to patterns, so vary your movement
+
+### General Strategy
+- Plan your moves 2-3 steps ahead
+- Control the center of the board for maximum options
+- Cut off your opponent's escape routes
+- Avoid creating enclosed spaces that trap you later
+
+## Troubleshooting
+
+### Server Won't Start
+- **Port Already in Use**: Another application is using port 3000
+  ```bash
+  # Kill process on port 3000 (Mac/Linux)
+  lsof -ti:3000 | xargs kill -9
+
+  # Or change the port in server.js
+  const PORT = 3001; // Use a different port
+  ```
+
+### Game Not Loading
+- **Clear Browser Cache**: Hard refresh with Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)
+- **Check Console**: Open browser DevTools (F12) and check for error messages
+- **Verify Server Running**: Ensure `npm start` shows "Tron Ares server running"
+
+### AI Not Learning
+- **Check Data Directory**: Ensure `data/games/` and `data/model/` directories exist
+- **Verify Permissions**: Server needs write access to create files
+- **Check Browser Console**: Look for fetch errors or network issues
+
+### Performance Issues
+- **Too Many Game Files**: Archive old games from `data/games/` to improve load times
+- **Browser Memory**: Close other tabs or restart browser
+- **Reduce Stats Queries**: The game fetches stats; ensure network is stable
+
+### Common Errors
+
+**"Failed to load model"**
+- The server creates a default model on first run
+- Check server logs for file system errors
+- Ensure `data/model/ares_model.json` has valid JSON
+
+**"Cannot POST /api/games"**
+- Server may not be running
+- Check that you're accessing http://localhost:3000 (not a file:// URL)
+- Verify CORS is enabled in server.js
+
+**Stats panel not updating**
+- Refresh the page after playing a few games
+- Check Network tab in DevTools for failed API calls
+- Verify server.js is saving games correctly
+
+## Current Performance
+
+As of the latest training session:
+- **88+ Games Played**
+- **47% Win Rate** for Ares AI
+- **Version 45+** of the neural network
+- Continuously improving with each match!
+
 ## Future Enhancements
 
 - Multiple AI difficulty levels
 - Tournament mode with AI vs AI
-- Visual decision explanation
+- Visual decision explanation (heatmap of danger zones)
 - Custom training scenarios
 - Online learning during gameplay
 - Model versioning and rollback
+- Multiplayer online mode
+- Replay system to watch past games
+- AI behavioral analysis dashboard
+
+## Contributing
+
+Feel free to fork this project and experiment with:
+- Different neural network architectures
+- Alternative learning algorithms
+- New feature extraction methods
+- Game variations (obstacles, power-ups, etc.)
+- UI/UX improvements
+
+## License
+
+This project is open source and available for educational purposes.
 
 ---
 
-Built with vanilla JavaScript, Node.js, and custom neural network implementation.
+**Built with vanilla JavaScript, Node.js, and custom neural network implementation.**
+
+No external ML libraries required - pure JavaScript implementation from scratch!
